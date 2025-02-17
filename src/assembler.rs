@@ -1,5 +1,6 @@
 use instruction::Instruction;
 use crate::instruction;
+use colored::Colorize;
 
 pub struct Assembler {
     pub code: String,
@@ -17,9 +18,11 @@ impl Assembler {
         let mut lines_without_comments: Vec<String> = vec![];
 
         for line in code_seperated_by_lines {
-            if line.chars().nth(0).unwrap() != '#' && line != "" {
-                let part_without_comment = line.split("#").nth(0).unwrap();
-                lines_without_comments.push(part_without_comment.trim().to_string());
+            if let Some(first_character) = line.clone().chars().nth(0){
+                if first_character != '#' && line != "" {
+                    let part_without_comment = line.split("#").nth(0).unwrap();
+                    lines_without_comments.push(part_without_comment.trim().to_string());
+                }
             }
         }
 
@@ -46,9 +49,13 @@ impl Assembler {
                         println!("{:?}", selected_string_split);
 
                         let name = selected_string_split.next().unwrap();
-                        let replacement = selected_string_split.next().unwrap();
-                        replacements.push((name.to_string(), format!("{}", replacement.to_string())));
-                        println!("pushing replacement {:?}", (name.to_string(), format!("{}", replacement.to_string())));
+                        if let Some(replacement) = selected_string_split.next() {
+                            replacements.push((name.to_string(), format!("{}", replacement.to_string())));
+                            println!("pushing replacement {:?}", (name.to_string(), format!("{}", replacement.to_string())));
+                        }else {
+                            let error = format!("Identifier {} at line {} misses an argument.", name, current_line).red().to_string();
+                            panic!("{}", error);
+                        }
                         continue;
                     }
                 }
@@ -91,7 +98,8 @@ impl Assembler {
                 let mut binary_instruction = instruction.to_binary();
                 binary.append(&mut binary_instruction);
             }else{
-                panic!("Couldn't decode line {} at {}.", line.clone().to_string(), i)
+                let error = format!("Couldn't decode line {} at {}.", line.clone().to_string(), i).red().to_string();
+                panic!("{}", error);
             }
         }
 

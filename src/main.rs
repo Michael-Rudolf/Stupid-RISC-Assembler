@@ -1,6 +1,7 @@
 use std::fs::File;
 use rfd::FileDialog;
 use std::io::prelude::*;
+use colored::Colorize;
 
 mod assembler;
 mod instruction;
@@ -32,4 +33,6 @@ fn main() {
     if let binary_file = File::create(store_path){
         _ = binary_file.unwrap().write_all(&binary);
     }
+
+    println!("{}", "Success!".to_string().green());
 }
