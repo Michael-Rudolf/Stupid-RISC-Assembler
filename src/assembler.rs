@@ -98,7 +98,7 @@ impl Assembler {
                 let mut binary_instruction = instruction.to_binary();
                 binary.append(&mut binary_instruction);
             }else{
-                let error = format!("Couldn't decode line {} at {}.", line.clone().to_string(), i).red().to_string();
+                let error = format!("Couldn't decode line {} at line {}.", line.clone().to_string(), i).red().to_string();
                 panic!("{}", error);
             }
         }

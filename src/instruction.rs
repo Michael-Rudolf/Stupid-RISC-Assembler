@@ -1,3 +1,9 @@
+use std::fmt::format;
+use std::io::Error;
+use std::num::ParseIntError;
+use colored::Colorize;
+use log::debug;
+
 #[derive(Copy)]
 pub struct Instruction{
     task: u8,
@@ -75,13 +81,35 @@ impl Instruction{
                 let arg1_string = arg1_lower.split_at(1);
                 let arg2_string = arg2_lower.split_at(1);
 
-                let mut arg1: u8 = arg1_string.1.parse().ok()?;  // Use `ok()?` to avoid unwrap panic
-                let mut arg2: u8 = arg2_string.1.parse().ok()?;
+                let can_retrieve_arguments = Ok::<Result<i64, ParseIntError>, Error>(arg1_string.1.parse::<i64>()).is_ok() && Ok::<Result<i64, ParseIntError>, Error>(arg2_string.1.parse::<i64>()).is_ok();
 
+                if !can_retrieve_arguments{
+                    let error = format!("Line {} couldn't be parsed. One of the two arguments is formated incorrectly.", instruction).red().to_string();
+                    panic!("{}", error);
+                }
+
+                // Check if argument size is reasonable
+                {
+                    let arg1: i64 = arg1_string.1.parse().unwrap();
+                    let arg2: i64 = arg2_string.1.parse().unwrap();
+
+                    if arg1 > 127 || arg1 < 0 {
+                        let error = format!("Expression {} in instruction {} should be within 0...127. If you need more, this should be defined in the data section.", arg1, instruction).red().to_string();
+                        panic!("{}", error);
+                    }
+                    if arg2 > 127 || arg2 < 0 {
+                        let error = format!("Expression {} in instruction {} should be within 0...127. If you need more, this should be defined in the data section.", arg2, instruction).red().to_string();
+                        panic!("{}", error);
+                    }
+                }
+
+                let mut arg1: u8 = arg1_string.1.parse().unwrap();
+                let mut arg2: u8 = arg2_string.1.parse().unwrap();
 
                 if arg1_string.0 == "r" { arg1 |= 0b1000_0000; }
                 if arg2_string.0 == "r" { arg2 |= 0b1000_0000; }
 
+                println!("Has 3 arguments {} and {}", arg1, arg2);
                 match task_string.as_ref() {
                     "add" => Some(Instruction::new(ADD_INSTRUCTION, arg1, arg2)),
                     "sub" => Some(Instruction::new(SUB_INSTRUCTION, arg1, arg2)),
