@@ -2,8 +2,8 @@
 This Rusty assembler can assemble my Stupid RISC Assembly language, which is as stupid as the name suggests.
 
 ## Table of contents
-- [Usage](README.md/Stupid-RISC-Assembler#Usage)
-- [Installation](/README.md/Stupid-RISC-Assembler#Installation)
+- [Usage](README.md#Usage)
+- [Installation](/README.md#Installation)
 
 ## Usage
 To visually select an input file, run
