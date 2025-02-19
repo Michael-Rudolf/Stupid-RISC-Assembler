@@ -18,7 +18,7 @@ impl Assembler {
         let mut lines_without_comments: Vec<String> = vec![];
 
         for line in code_seperated_by_lines {
-            if let Some(first_character) = line.clone().chars().nth(0){
+            if let Some(first_character) = line.chars().nth(0){
                 if first_character != '#' && line != "" {
                     let part_without_comment = line.split("#").nth(0).unwrap();
                     lines_without_comments.push(part_without_comment.trim().to_string());
@@ -162,7 +162,7 @@ impl Assembler {
 
     fn move_items_by_index<T: Clone>(vec: &mut Vec<T>, indices: &Vec<usize>, target_index: usize) {
         // Collect elements by index while preserving order
-        let mut extracted: Vec<T> = indices.iter().map(|&i| vec[i].clone()).collect();
+        let extracted: Vec<T> = indices.iter().map(|&i| vec[i].clone()).collect();
 
         // Sort indices in descending order to remove them without shifting remaining indices
         let mut sorted_indices = indices.to_vec();
