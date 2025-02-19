@@ -1,6 +1,10 @@
 # Stupid RISC Assembler
 This Rusty assembler can assemble my Stupid RISC Assembly language, which is as stupid as the name suggests.
 
+## Table of contents
+- [Usage](/Michael-Rudolf/Stupid-RISC-Assembler#Usage)
+- [Installation](/Michael-Rudolf/Stupid-RISC-Assembler#Installation)
+
 ## Usage
 To visually select an input file, run
 ```shell
