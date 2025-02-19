@@ -1,6 +1,20 @@
 # Stupid RISC Assembler
 This Rusty assembler can assemble my Stupid RISC Assembly language, which is as stupid as the name suggests.
 
+## Usage
+To visually select an input file, run
+```shell
+sriscasm -v
+```
+*You might need to replace sriscasm with your own chosen name or the path to the executable depending on how you installed it.*
+
+To parse the input path as an argument, run
+```shell
+sriscasm -f path/to/file
+```
+
+
+
 ## Installation
 ### This programm can't actually be installed, but it can be aliased.
 To perform this, please build it first.
