@@ -18,6 +18,8 @@ pub struct Instruction{
 // 011: Other internal (mov, etc)
 // 000: Memory OP
 // 001: Reserved for future applications
+
+//11/256 used = 4.3%
 pub const ADD_INSTRUCTION: u8 = 0b0100_0000;
 pub const SUB_INSTRUCTION: u8 = 0b0100_0001;
 pub const MUL_INSTRUCTION: u8 = 0b0100_0010;
