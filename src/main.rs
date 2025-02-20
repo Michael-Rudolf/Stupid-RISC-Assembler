@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 mod assembler;
 mod instruction;
+mod argument_parser;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

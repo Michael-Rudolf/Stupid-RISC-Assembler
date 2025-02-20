@@ -44,7 +44,7 @@ impl Assembler {
                 if last_character == ':' {
                     // This indicates a function afterward, therefore, store the current line number
                     let name = characters[0..characters.len() - 1].iter().collect::<String>();
-                    replacements.push((name.clone(), format!("N{}", current_line * 3)));
+                    replacements.push((name.clone(), (current_line * 3).to_string()));
                     println!("pushing replacement {:?}", (name.clone(), format!("N{}", current_line * 3)));
                     if start_function_start.is_some() && start_function_end.is_none(){
                         start_function_end = Some(current_line);
@@ -141,7 +141,7 @@ impl Assembler {
         let mut i: u32 = 0;
         for line in lines_except_values.clone() {
             i += 1;
-            if let Some(instruction) = Instruction::from_string(line.clone()){
+            if let Some(instruction) = Instruction::from_string(line.clone(), i){
                 let mut binary_instruction = instruction.to_binary();
                 binary.append(&mut binary_instruction);
             }else{
@@ -149,9 +149,6 @@ impl Assembler {
                 panic!("{}", error);
             }
         }
-
-
-
         self.output = binary;
 
 
