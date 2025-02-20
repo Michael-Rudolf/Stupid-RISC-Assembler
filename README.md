@@ -39,6 +39,17 @@ You can make an alias in your bash/zsh/fish profile.
 For example (**change for your own system!**)
 ```shell
 sriscasm(){
-        (cd ~/path-to-destination && ./Stupid-RISC-assembler "$@")
+    args=()
+    for arg in "$@"; do
+        if [[ -d "$arg" || -f "$arg" ]]; then
+            abs_path="$(realpath "$arg")"
+            echo "Converted $arg -> $abs_path"  # Debug print
+            args+=("$abs_path")
+        else
+            args+=("$arg")
+        fi
+    done
+    echo "Final args: ${args[@]}"  # Debug print
+    (cd ~/Applications/ && ./Stupid-RISC-assembler "${args[@]}")
 }
 ```
