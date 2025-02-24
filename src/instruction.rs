@@ -17,7 +17,7 @@ pub struct Instruction{
 // 000: Memory OP
 // 001: Reserved for future applications
 
-//11/256 used = 4.3%
+//12/256 used = 4.3%
 pub const ADD_INSTRUCTION: u8 = 0b0100_0000;
 pub const SUB_INSTRUCTION: u8 = 0b0100_0001;
 pub const MUL_INSTRUCTION: u8 = 0b0100_0010;
@@ -25,16 +25,20 @@ pub const DIV_INSTRUCTION: u8 = 0b0100_0011;
 pub const MOD_INSTRUCTION: u8 = 0b0100_0100;
 pub const HALT_INSTRUCTION: u8 = 0b0110_0000;
 pub const MOVE_INSTRUCTION: u8 = 0b0110_0001;
+pub const LOAD_IMMEDIATE_TO_INTERNAL_INSTRUCTION: u8 = 0b0110_1010;
 pub const JUMP_INSTRUCTION: u8 = 0b0110_0010;
 // Jumps to arg2 if arg1 is 0
 pub const JUMP_ZERO_INSTRUCTION: u8 = 0b0110_0011;
 pub const LOAD_BYTE_INSTRUCTION: u8 = 0b0110_0100;
 pub const STORE_BYTE_INSTRUCTION: u8 = 0b0111_0100;
 
-
-
+#[allow(dead_code)]
+pub const RESERVED_REGISTER: u8 = 11+128;
+#[allow(dead_code)]
 pub const FLAGS_REGISTER: u8 = 12 + 128;
+#[allow(dead_code)]
 pub const EXEC_PTR_REGISTER: u8 = 15 + 128;
+#[allow(dead_code)]
 pub const EMPTY_ARGUMENT: u8 = 0;
 impl Instruction{
     pub fn new(task: u8, arg0: u8, arg1: u8) -> Instruction{

@@ -1,4 +1,5 @@
 use colored::Colorize;
+use crate::replacement::Replacement;
 
 const CHARACTERS: [&str; 36] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 
@@ -39,6 +40,215 @@ impl ArgumentParser {
         }
     }
 
+    pub fn remove_comments(code: Vec<String>) -> Vec<String> {
+        let mut result: Vec<String> = Vec::new();
+        for line in code.iter() {
+            if let Some(first_character) = line.chars().nth(0) {
+                if first_character != '#' && line != "" {
+                    let part_without_comment = line.split("#").nth(0).unwrap();
+                    result.push(part_without_comment.trim().to_string());
+                }
+            }
+        }
+
+        result
+    }
+
+
+    /*fn resolve_macro(macro_n: &str, arg1: Option<u32>, arg2: Option<u32>, line: u32) -> Vec<String> {
+        // Remove leading !
+        let macro_characters: Vec<char> = Ok(macro_n.chars().collect()).unwrap();
+        let macro_internal_name = macro_characters[1..].to_vec().iter().collect().as_ref();
+
+        match macro_internal_name{
+            "jmp" => {
+                if arg1.is_none(){
+                    let error = format!(" Macro '{}' at line {} requires at least 1 argument but 0 were found.", macro_internal_name, line).red().to_string();
+                    panic!("{}", error);
+                }
+                if arg1.unwrap() < 128{
+                    return vec![format!("jmp {}", arg1.unwrap())];
+                }
+                return vec![
+                    format!("ldii {}", arg1.unwrap()), // Load immediate to internal register
+                    format!("jmp R{}", RESERVED_REGISTER),
+                ];
+            }
+            _ => {
+                let error = format!("Unknown macro '{}' at line {}.", macro_internal_name, line).red().to_string();
+                panic!("{}", error);
+            }
+        }
+
+        return vec![]
+    }*/
+
+    pub fn get_replacements_from_code(code: Vec<String>) -> Vec<Replacement> {
+        let mut replacements: Vec<Replacement> = Vec::new();
+        let mut i: u16 = 0;
+        let mut current_line_number: u16 = 0;
+        for line in code.iter() {
+            current_line_number += 1;
+            // Ensure line has at least one char
+            if line.is_empty() { continue; }
+            if line.starts_with('.') {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() != 2{
+                    let error = format!("Two arguments required for constant declaration, but {} where found at line {}.", parts.len(), current_line_number).red().to_string();
+                    panic!("{}", error);
+                }
+                let constant_name = parts.get(0).unwrap().chars().collect::<Vec<char>>()[1..].iter().collect::<String>();
+                let constant_value = parts.get(1).unwrap().chars().collect::<Vec<char>>().iter().collect();
+                replacements.push(Replacement::new(constant_name, constant_value, false));
+                continue;
+            }
+            if line.ends_with(":"){
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() != 1{
+                    let error = format!("Function declaration requires function name (and nothing more or less). This wasn't followed at line {}.", current_line_number).red().to_string();
+                    panic!("{}", error);
+                }
+                let characters = parts.get(0).unwrap().chars().collect::<Vec<char>>();
+                let function_name = characters[0..characters.len() - 1].iter().collect::<String>();
+
+                let replacement = Replacement::new(function_name, i.to_string(), true);
+                println!("i: {}", i);
+                println!("{}", replacement.make_description());
+                replacements.push(replacement);
+
+                continue;
+            }
+            i += 1;
+        }
+
+        replacements = Self::replace_replacements(replacements);
+
+        replacements
+    }
+
+    fn replace_replacements(replacements: Vec<Replacement>) -> Vec<Replacement> {
+        let mut output: Vec<Replacement> = replacements.to_vec();
+        for _ in 0..replacements.len() {
+            for i in 0..output.len() {
+                for replacement in replacements.iter() {
+                    if replacement.get_name() == output[i].get_value() {
+                        output[i].set_value(replacement.get_value(), replacement.get_is_function())
+                    }
+                }
+            }
+        }
+
+        output
+    }
+
+    pub fn remove_declaration_lines(code: Vec<String>) -> Vec<String> {
+        let mut result: Vec<String> = Vec::new();
+
+        for line in code.iter() {
+            if line.is_empty() { continue; }
+            if line.starts_with('.') { continue; }
+            if line.ends_with(':') { continue; }
+
+            result.push(line.to_string());
+        }
+
+        result
+    }
+
+
+
+    pub fn get_start_function(replacements: Vec<Replacement>) -> FunctionMetadata {
+        // Fetch start function name
+        let mut start_function_name: Option<String> = None;
+        for replacement in replacements.iter() {
+            if replacement.get_name() != "global_start" { continue }
+            start_function_name = Some(replacement.get_name().to_string().clone());
+            break;
+        }
+
+        if start_function_name.clone().is_none() {
+            let error = format!("Needs start function declaration (insert .global_start <main/start>).").red().to_string();
+            panic!("{}", error);
+        }
+
+        // Fetch start & end position
+        let mut start_function_start_pos: Option<u16> = None;
+        let mut start_function_end_pos: Option<u16> = None;
+        let mut i: u16 = 0;
+        for replacement in replacements.iter() {
+            i += 1;
+            if replacement.get_name() != start_function_name.clone().unwrap() { continue }
+
+            if !replacement.get_is_function(){
+                //let error = format!("Invalid constant name '{}'. No constant can be named {:?}", replacement.get_name(), start_function_name.clone().unwrap()).red().to_string();
+                //panic!("{}", error);
+                continue;
+            }
+
+            start_function_start_pos = Some(replacement.get_value().parse::<u16>().unwrap());
+
+            // The end position is just the next function / the last number
+            if replacements.len() >= i as usize {
+                let end_replacement = replacements.get(i as usize).unwrap();
+
+                if !end_replacement.get_is_function(){
+                    /*let error = format!("Constants can't be defined in global_start function. Please move {} to the top instead", end_replacement.get_name()).red().to_string();
+                    panic!("{}", error);*/
+                    continue;
+                }
+
+                let end_function_value = end_replacement.get_value().parse::<u16>().unwrap();
+                start_function_end_pos = Some(end_function_value)
+            }
+
+            break;
+        }
+
+        if start_function_start_pos.is_none() {
+            let error = format!("Start function name ({}) defined but not implemented.", start_function_name.unwrap().red().to_string()).red().to_string();
+            panic!("{}", error);
+        }
+
+        FunctionMetadata{ name: start_function_name.unwrap().to_string(), start: start_function_start_pos.unwrap(), end: start_function_end_pos }
+    }
+
+    pub fn apply_replacements_in_code(replacements: Vec<Replacement>, code: &mut Vec<String>){
+        for i in 0..code.iter().len(){
+            for replacement in replacements.iter() {
+                code[i] = code[i].replace(replacement.get_name().as_str(), replacement.get_value().as_str()).as_str().to_string();
+            }
+        }
+    }
+
+    pub fn function_lines_to_function_bytes(replacements: &mut Vec<Replacement>){
+        for i in 0..replacements.len(){
+            if !replacements[i].get_is_function() { continue; }
+            let replacement = replacements[i].clone();
+            let new_value = (replacement.get_value().parse::<u16>().unwrap() * 3).to_string();
+            let is_function = replacement.get_is_function();
+            replacements[i].set_value(new_value, is_function);
+        }
+    }
+
+    pub fn move_replacements_after_end_function(start_function_length_lines: u16, old_replacements: Vec<Replacement>) -> Vec<Replacement>{
+        let mut stop_updating = false;
+        let mut replacements: Vec<Replacement> = old_replacements.to_vec();
+        let start_function_name = Self::get_start_function(old_replacements).name.clone();
+        for i in 0..replacements.len(){
+            if !replacements[i].get_is_function(){ continue; }
+            if replacements[i].get_name() == start_function_name.to_string().as_str() {
+                stop_updating = true;
+            }
+            if !stop_updating {
+                let new_replacement = replacements[i].get_value().parse::<u16>().unwrap() + start_function_length_lines;
+                replacements[i].set_value(new_replacement.to_string(), true);
+                continue;
+            }
+        }
+
+        replacements
+    }
+
 
     pub fn convert(a: &str, a_sys: i8, b_sys: i8, ) -> String {
         // Convert to int
@@ -63,4 +273,9 @@ impl ArgumentParser {
 
         b.chars().rev().collect::<String>()
     }
+}
+pub struct FunctionMetadata{
+    pub name: String,
+    pub start: u16,
+    pub end: Option<u16>,
 }
