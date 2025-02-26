@@ -192,7 +192,7 @@ impl ArgumentParser {
             start_function_start_pos = Some(replacement.get_value().parse::<u16>().unwrap());
 
             // The end position is just the next function / the last number
-            if replacements.len() >= i as usize {
+            if replacements.len() > i as usize {
                 let end_replacement = replacements.get(i as usize).unwrap();
 
                 if !end_replacement.get_is_function(){
