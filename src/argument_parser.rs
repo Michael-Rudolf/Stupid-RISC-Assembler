@@ -130,9 +130,11 @@ impl ArgumentParser {
         let mut output: Vec<Replacement> = replacements.to_vec();
         for _ in 0..replacements.len() {
             for i in 0..output.len() {
+                let mut origin = output[i].clone();
                 for replacement in replacements.iter() {
                     if replacement.get_name() == output[i].get_value() {
-                        output[i].set_value(replacement.get_value(), replacement.get_is_function())
+
+                        output[i].set_value(replacement.get_value(), origin.get_is_function())
                     }
                 }
             }
@@ -161,13 +163,15 @@ impl ArgumentParser {
         // Fetch start function name
         let mut start_function_name: Option<String> = None;
         for replacement in replacements.iter() {
+            println!("Replacemeasfdasdfnt: {}", replacement.get_name());
             if replacement.get_name() != "global_start" { continue }
-            start_function_name = Some(replacement.get_name().to_string().clone());
+            println!("#Replacemeasfdasdfnt: {}", replacement.get_value());
+            start_function_name = Some(replacement.get_value().to_string().clone());
             break;
         }
 
         if start_function_name.clone().is_none() {
-            let error = format!("Needs start function declaration (insert .global_start <main/start>).").red().to_string();
+            let error = "Needs start function declaration (insert .global_start <main/start>).".red().to_string();
             panic!("{}", error);
         }
 
@@ -177,7 +181,7 @@ impl ArgumentParser {
         let mut i: u16 = 0;
         for replacement in replacements.iter() {
             i += 1;
-            if replacement.get_name() != start_function_name.clone().unwrap() { continue }
+            if replacement.get_value() != start_function_name.clone().unwrap() { continue }
 
             if !replacement.get_is_function(){
                 //let error = format!("Invalid constant name '{}'. No constant can be named {:?}", replacement.get_name(), start_function_name.clone().unwrap()).red().to_string();
@@ -233,15 +237,24 @@ impl ArgumentParser {
     pub fn move_replacements_after_end_function(start_function_length_lines: u16, old_replacements: Vec<Replacement>) -> Vec<Replacement>{
         let mut stop_updating = false;
         let mut replacements: Vec<Replacement> = old_replacements.to_vec();
-        let start_function_name = Self::get_start_function(old_replacements).name.clone();
+        // The problem:
+        // Start function name is global_start, so it'll always think the start function starts at .global_start main.
+        // Retrieve the value of .global_start instead and wait for a function to equal it instead.
+        let mut global_start_value : u16 = 0;
+        for old_replacement in replacements.iter() {
+            if old_replacement.get_name() == "global_start" { global_start_value = old_replacement.get_value().parse::<u16>().unwrap(); break; }
+        }
         for i in 0..replacements.len(){
             if !replacements[i].get_is_function(){ continue; }
-            if replacements[i].get_name() == start_function_name.to_string().as_str() {
+            println!("::replacing xaysdf {} (repl: {}", replacements[i].get_name(), !stop_updating);
+            if replacements[i].get_value() == global_start_value.to_string().as_str() {
+                replacements[i].set_value(0.to_string(), true);
                 stop_updating = true;
             }
             if !stop_updating {
                 let new_replacement = replacements[i].get_value().parse::<u16>().unwrap() + start_function_length_lines;
                 replacements[i].set_value(new_replacement.to_string(), true);
+                println!("doing something named {} with {}", replacements[i].get_name(), new_replacement);
                 continue;
             }
         }
