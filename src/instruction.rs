@@ -26,6 +26,8 @@ pub const MOD_INSTRUCTION: u8 = 0b0100_0100;
 pub const HALT_INSTRUCTION: u8 = 0b0110_0000;
 pub const MOVE_INSTRUCTION: u8 = 0b0110_0001;
 pub const LOAD_IMMEDIATE_TO_INTERNAL_INSTRUCTION: u8 = 0b0110_1010;
+pub const PUSH_BYTE_INSTRUCTION: u8 = 0b0110_0101;
+pub const POP_BYTE_INSTRUCTION: u8 = 0b0110_0100;
 pub const JUMP_INSTRUCTION: u8 = 0b0110_0010;
 // Jumps to arg2 if arg1 is 0
 pub const JUMP_ZERO_INSTRUCTION: u8 = 0b0110_0011;
@@ -38,6 +40,7 @@ pub const RESERVED_REGISTER: u8 = 11+128;
 pub const FLAGS_REGISTER: u8 = 12 + 128;
 #[allow(dead_code)]
 pub const EXEC_PTR_REGISTER: u8 = 15 + 128;
+pub const FRAME_PTR_REGISTER: u8 = 13 + 128;
 #[allow(dead_code)]
 pub const EMPTY_ARGUMENT: u8 = 0;
 impl Instruction{
@@ -66,6 +69,7 @@ impl Instruction{
 
                 match task_string.as_ref() {
                     "jmp" => Some(Instruction::new(JUMP_INSTRUCTION, EXEC_PTR_REGISTER, arg1)),
+                    "pushb" => Some(Instruction::new(PUSH_BYTE_INSTRUCTION, FRAME_PTR_REGISTER, arg1)),
                     _ => None
                 }
             }
