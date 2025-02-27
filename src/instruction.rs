@@ -27,7 +27,7 @@ pub const HALT_INSTRUCTION: u8 = 0b0110_0000;
 pub const MOVE_INSTRUCTION: u8 = 0b0110_0001;
 pub const LOAD_IMMEDIATE_TO_INTERNAL_INSTRUCTION: u8 = 0b0110_1010;
 pub const PUSH_BYTE_INSTRUCTION: u8 = 0b0110_0101;
-pub const POP_BYTE_INSTRUCTION: u8 = 0b0110_0100;
+pub const POP_BYTE_INSTRUCTION: u8 = 0b0110_1100;
 pub const JUMP_INSTRUCTION: u8 = 0b0110_0010;
 // Jumps to arg2 if arg1 is 0
 pub const JUMP_ZERO_INSTRUCTION: u8 = 0b0110_0011;
@@ -70,6 +70,8 @@ impl Instruction{
                 match task_string.as_ref() {
                     "jmp" => Some(Instruction::new(JUMP_INSTRUCTION, EXEC_PTR_REGISTER, arg1)),
                     "pushb" => Some(Instruction::new(PUSH_BYTE_INSTRUCTION, FRAME_PTR_REGISTER, arg1)),
+                    "inc" => Some(Instruction::new(ADD_INSTRUCTION, arg1, 1)),
+                    "dec" => Some(Instruction::new(SUB_INSTRUCTION, arg1, 1)),
                     _ => None
                 }
             }
@@ -86,6 +88,7 @@ impl Instruction{
                     "jmpz" => Some(Instruction::new(JUMP_ZERO_INSTRUCTION, arg1, arg2)),
                     "mov" => Some(Instruction::new(MOVE_INSTRUCTION, arg1, arg2)),
                     "ldb" => Some(Instruction::new(LOAD_BYTE_INSTRUCTION, arg1, arg2)),
+                    "popb" => Some(Instruction::new(POP_BYTE_INSTRUCTION, arg1, 0)),
                     "stb" => Some(Instruction::new(STORE_BYTE_INSTRUCTION, arg1, arg2)),
                     _ => None
                 }
