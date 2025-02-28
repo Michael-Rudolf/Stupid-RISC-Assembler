@@ -29,10 +29,11 @@ impl ArgumentParser {
         let encoding = splitted_argument.0;
         let number = splitted_argument.1;
         match encoding.to_ascii_lowercase().as_str() {
-            "x" => { return Self::convert(number, 16, 10).parse::<u8>().unwrap() },
-            "o" => { return Self::convert(number, 8, 10).parse::<u8>().unwrap() },
-            "b" => { return Self::convert(number, 2, 10).parse::<u8>().unwrap() },
-            "r" => { return number.parse::<u8>().unwrap() | 0b1000_0000 },
+            "x" => { Self::convert(number, 16, 10).parse::<u8>().unwrap() },
+            "o" => { Self::convert(number, 8, 10).parse::<u8>().unwrap() },
+            "b" => { Self::convert(number, 2, 10).parse::<u8>().unwrap() },
+            "r" => { number.parse::<u8>().unwrap() | 0b1000_0000 },
+            "\'" => { number.chars().nth(0).unwrap() as u8 },
             _ => {
                 let error = format!("Number system {} in argument {} (line {}) isn't available.", encoding, argument, line).red().to_string();
                 panic!("{}", error);

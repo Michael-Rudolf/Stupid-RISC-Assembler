@@ -17,7 +17,9 @@ pub struct Instruction{
 // 000: Memory OP
 // 001: Reserved for future applications
 
-//12/256 used = 4.3%
+//15/256 used = 5.8%
+pub const STANDARD_OUTPUT_WRITE_INSTRUCTION: u8 = 0b0000_0001;
+pub const STANDARD_OUTPUT_CLEAR_INSTRUCTION: u8 = 0b0000_0010;
 pub const ADD_INSTRUCTION: u8 = 0b0100_0000;
 pub const SUB_INSTRUCTION: u8 = 0b0100_0001;
 pub const MUL_INSTRUCTION: u8 = 0b0100_0010;
@@ -61,6 +63,7 @@ impl Instruction{
             1 => {
                 match task_string.as_ref() {
                     "halt" => Some(Instruction::new(HALT_INSTRUCTION, FLAGS_REGISTER, EMPTY_ARGUMENT)),
+                    "soc" => Some(Instruction::new(STANDARD_OUTPUT_CLEAR_INSTRUCTION, 0, 0)),
                     _ => None
                 }
             },
@@ -73,6 +76,7 @@ impl Instruction{
                     "popb" => Some(Instruction::new(POP_BYTE_INSTRUCTION, arg1, 0)),
                     "inc" => Some(Instruction::new(ADD_INSTRUCTION, arg1, 1)),
                     "dec" => Some(Instruction::new(SUB_INSTRUCTION, arg1, 1)),
+                    "sow" => Some(Instruction::new(STANDARD_OUTPUT_WRITE_INSTRUCTION, arg1, 0)),
                     _ => None
                 }
             }
