@@ -70,6 +70,7 @@ impl Instruction{
                 match task_string.as_ref() {
                     "jmp" => Some(Instruction::new(JUMP_INSTRUCTION, EXEC_PTR_REGISTER, arg1)),
                     "pushb" => Some(Instruction::new(PUSH_BYTE_INSTRUCTION, FRAME_PTR_REGISTER, arg1)),
+                    "popb" => Some(Instruction::new(POP_BYTE_INSTRUCTION, arg1, 0)),
                     "inc" => Some(Instruction::new(ADD_INSTRUCTION, arg1, 1)),
                     "dec" => Some(Instruction::new(SUB_INSTRUCTION, arg1, 1)),
                     _ => None
@@ -88,7 +89,6 @@ impl Instruction{
                     "jmpz" => Some(Instruction::new(JUMP_ZERO_INSTRUCTION, arg1, arg2)),
                     "mov" => Some(Instruction::new(MOVE_INSTRUCTION, arg1, arg2)),
                     "ldb" => Some(Instruction::new(LOAD_BYTE_INSTRUCTION, arg1, arg2)),
-                    "popb" => Some(Instruction::new(POP_BYTE_INSTRUCTION, arg1, 0)),
                     "stb" => Some(Instruction::new(STORE_BYTE_INSTRUCTION, arg1, arg2)),
                     _ => None
                 }
