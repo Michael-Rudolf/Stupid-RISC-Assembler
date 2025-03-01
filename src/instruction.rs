@@ -1,10 +1,25 @@
+use colored::Colorize;
 use crate::argument_parser::ArgumentParser;
 
 #[derive(Copy)]
 pub struct Instruction{
     task: u8,
+    required_arguments: u8,
     arg0: u8,
     arg1: u8,
+}
+
+impl Instruction {
+    pub fn to_vec(&self) -> Vec<u8>{
+        let mut result: Vec<u8> = vec![self.task];
+
+        match self.required_arguments{
+            0 => { result },
+            1 => { result.push(self.arg0); result },
+            2 => { result.push(self.arg0); result.push(self.arg1); result },
+            _ => { panic!("{}", "Amount of arguments not supported".red()) },
+        }
+    }
 }
 
 // Task encoding after bits:
@@ -46,8 +61,8 @@ pub const FRAME_PTR_REGISTER: u8 = 13 + 128;
 #[allow(dead_code)]
 pub const EMPTY_ARGUMENT: u8 = 0;
 impl Instruction{
-    pub fn new(task: u8, arg0: u8, arg1: u8) -> Instruction{
-        Instruction{task, arg0, arg1}
+    pub fn new(task: u8, required_arguments: u8, arg0: u8, arg1: u8) -> Instruction{
+        Instruction{task, required_arguments, arg0, arg1}
     }
 
     pub fn to_binary(&self) -> Vec<u8>{
@@ -62,8 +77,8 @@ impl Instruction{
         match splitted.len() {
             1 => {
                 match task_string.as_ref() {
-                    "halt" => Some(Instruction::new(HALT_INSTRUCTION, FLAGS_REGISTER, EMPTY_ARGUMENT)),
-                    "soc" => Some(Instruction::new(STANDARD_OUTPUT_CLEAR_INSTRUCTION, 0, 0)),
+                    "halt" => Some(Instruction::new(HALT_INSTRUCTION, 0,0, 0)),
+                    "soc" => Some(Instruction::new(STANDARD_OUTPUT_CLEAR_INSTRUCTION, 0, 0, 0)),
                     _ => None
                 }
             },
@@ -71,12 +86,12 @@ impl Instruction{
                 let arg1 = ArgumentParser::argument_to_8_bit_binary(splitted[1], current_line);
 
                 match task_string.as_ref() {
-                    "jmp" => Some(Instruction::new(JUMP_INSTRUCTION, EXEC_PTR_REGISTER, arg1)),
-                    "pushb" => Some(Instruction::new(PUSH_BYTE_INSTRUCTION, FRAME_PTR_REGISTER, arg1)),
-                    "popb" => Some(Instruction::new(POP_BYTE_INSTRUCTION, arg1, 0)),
-                    "inc" => Some(Instruction::new(ADD_INSTRUCTION, arg1, 1)),
-                    "dec" => Some(Instruction::new(SUB_INSTRUCTION, arg1, 1)),
-                    "sow" => Some(Instruction::new(STANDARD_OUTPUT_WRITE_INSTRUCTION, arg1, 0)),
+                    "jmp" => Some(Instruction::new(JUMP_INSTRUCTION, 1, arg1, 0)),
+                    "pushb" => Some(Instruction::new(PUSH_BYTE_INSTRUCTION, 1, arg1, 0)),
+                    "popb" => Some(Instruction::new(POP_BYTE_INSTRUCTION, 1, arg1, 0)),
+                    "inc" => Some(Instruction::new(ADD_INSTRUCTION, 2, arg1, 1)),
+                    "dec" => Some(Instruction::new(SUB_INSTRUCTION, 2, arg1, 1)),
+                    "sow" => Some(Instruction::new(STANDARD_OUTPUT_WRITE_INSTRUCTION, 0, arg1, 0)),
                     _ => None
                 }
             }
@@ -85,15 +100,15 @@ impl Instruction{
                 let arg2 = ArgumentParser::argument_to_8_bit_binary(splitted[2], current_line);
 
                 match task_string.as_ref() {
-                    "add" => Some(Instruction::new(ADD_INSTRUCTION, arg1, arg2)),
-                    "sub" => Some(Instruction::new(SUB_INSTRUCTION, arg1, arg2)),
-                    "mul" => Some(Instruction::new(MUL_INSTRUCTION, arg1, arg2)),
-                    "div" => Some(Instruction::new(DIV_INSTRUCTION, arg1, arg2)),
-                    "mod" => Some(Instruction::new(MOD_INSTRUCTION, arg1, arg2)),
-                    "jmpz" => Some(Instruction::new(JUMP_ZERO_INSTRUCTION, arg1, arg2)),
-                    "mov" => Some(Instruction::new(MOVE_INSTRUCTION, arg1, arg2)),
-                    "ldb" => Some(Instruction::new(LOAD_BYTE_INSTRUCTION, arg1, arg2)),
-                    "stb" => Some(Instruction::new(STORE_BYTE_INSTRUCTION, arg1, arg2)),
+                    "add" => Some(Instruction::new(ADD_INSTRUCTION, 2, arg1, arg2)),
+                    "sub" => Some(Instruction::new(SUB_INSTRUCTION, 2, arg1, arg2)),
+                    "mul" => Some(Instruction::new(MUL_INSTRUCTION, 2, arg1, arg2)),
+                    "div" => Some(Instruction::new(DIV_INSTRUCTION, 2, arg1, arg2)),
+                    "mod" => Some(Instruction::new(MOD_INSTRUCTION, 2, arg1, arg2)),
+                    "jmpz" => Some(Instruction::new(JUMP_ZERO_INSTRUCTION, 2, arg1, arg2)),
+                    "mov" => Some(Instruction::new(MOVE_INSTRUCTION, 2, arg1, arg2)),
+                    "ldb" => Some(Instruction::new(LOAD_BYTE_INSTRUCTION, 2, arg1, arg2)),
+                    "stb" => Some(Instruction::new(STORE_BYTE_INSTRUCTION, 2, arg1, arg2)),
                     _ => None
                 }
             }
@@ -104,7 +119,7 @@ impl Instruction{
 
 impl Clone for Instruction{
     fn clone(&self) -> Instruction{
-        Instruction{task: self.task, arg0: self.arg0, arg1: self.arg1}
+        Instruction{task: self.task, required_arguments: self.required_arguments, arg0: self.arg0, arg1: self.arg1}
     }
 }
 

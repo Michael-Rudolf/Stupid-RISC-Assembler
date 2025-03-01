@@ -51,7 +51,7 @@ impl Assembler {
         for line in lines_except_values.clone() {
             i += 1;
             if let Some(instruction) = Instruction::from_string(line.clone(), i){
-                let mut binary_instruction = instruction.to_binary();
+                let mut binary_instruction = instruction.to_vec();
                 binary.append(&mut binary_instruction);
             }else{
                 let error = format!("Couldn't decode line {} at line {}.", line.clone().to_string(), i).red().to_string();
