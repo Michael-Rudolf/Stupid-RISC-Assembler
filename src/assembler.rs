@@ -63,7 +63,7 @@ impl Assembler {
 
     fn move_items_by_index<T: Clone>(vec: &mut Vec<T>, indices: &Vec<usize>, target_index: usize) {
         // Collect elements by index while preserving order
-        let extracted: Vec<T> = indices.iter().map(|&i| vec[i].clone()).collect();
+        /*let extracted: Vec<T> = indices.iter().map(|&i| vec[i].clone()).collect();
 
         // Sort indices in descending order to remove them without shifting remaining indices
         let mut sorted_indices = indices.to_vec();
@@ -76,8 +76,9 @@ impl Assembler {
 
         // Insert extracted items at the target position
         let insert_pos = target_index.min(vec.len());
-        vec.splice(insert_pos..insert_pos, extracted);
+        vec.splice(insert_pos..insert_pos, extracted);*/
     }
+
 }
 
 

@@ -65,6 +65,14 @@ impl Instruction{
         Instruction{task, required_arguments, arg0, arg1}
     }
 
+    pub fn bytes_required_by_instruction_by_name(named: String) -> u8{
+        match named.as_str(){
+            "halt" | "soc" => 1,
+            "jmp" | "pushb" | "popb" | "inc" | "dec" | "sow" => 2,
+            "add" | "sub" | "mul" | "div" | "mod" | "jmpz" | "mov" | "ldb" | "stb" => 3,
+            _ => 0
+        }
+    }
     pub fn to_binary(&self) -> Vec<u8>{
         [self.task, self.arg0, self.arg1].to_vec()
     }
@@ -91,7 +99,7 @@ impl Instruction{
                     "popb" => Some(Instruction::new(POP_BYTE_INSTRUCTION, 1, arg1, 0)),
                     "inc" => Some(Instruction::new(ADD_INSTRUCTION, 2, arg1, 1)),
                     "dec" => Some(Instruction::new(SUB_INSTRUCTION, 2, arg1, 1)),
-                    "sow" => Some(Instruction::new(STANDARD_OUTPUT_WRITE_INSTRUCTION, 0, arg1, 0)),
+                    "sow" => Some(Instruction::new(STANDARD_OUTPUT_WRITE_INSTRUCTION, 1, arg1, 0)),
                     _ => None
                 }
             }

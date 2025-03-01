@@ -1,4 +1,5 @@
 use colored::Colorize;
+use crate::instruction;
 use crate::replacement::Replacement;
 
 const CHARACTERS: [&str; 36] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
@@ -87,6 +88,7 @@ impl ArgumentParser {
     pub fn get_replacements_from_code(code: Vec<String>) -> Vec<Replacement> {
         let mut replacements: Vec<Replacement> = Vec::new();
         let mut i: u16 = 0;
+        let mut passed_bytes: u32 = 0;
         let mut current_line_number: u16 = 0;
         for line in code.iter() {
             current_line_number += 1;
@@ -112,11 +114,13 @@ impl ArgumentParser {
                 let characters = parts.get(0).unwrap().chars().collect::<Vec<char>>();
                 let function_name = characters[0..characters.len() - 1].iter().collect::<String>();
 
-                let replacement = Replacement::new(function_name, i.to_string(), true);
+                let replacement = Replacement::new(function_name, passed_bytes.to_string(), true);
                 replacements.push(replacement);
 
                 continue;
             }
+            let instruction_name = line.split_whitespace().nth(0).unwrap();
+            passed_bytes += instruction::Instruction::bytes_required_by_instruction_by_name(instruction_name.to_string()) as u32;
             i += 1;
         }
 
@@ -216,19 +220,24 @@ impl ArgumentParser {
     pub fn apply_replacements_in_code(replacements: Vec<Replacement>, code: &mut Vec<String>){
         for i in 0..code.iter().len(){
             for replacement in replacements.iter() {
+                print!("Replacing {} with: ", code[i]);
                 code[i] = code[i].replace(replacement.get_name().as_str(), replacement.get_value().as_str()).as_str().to_string();
+                println!("{}", code[i]);
             }
         }
     }
 
     pub fn function_lines_to_function_bytes(replacements: &mut Vec<Replacement>){
-        for i in 0..replacements.len(){
+        for replacement in replacements.iter() {
+            println!("{}", replacement.make_description());
+        }
+        /*for i in 0..replacements.len(){
             if !replacements[i].get_is_function() { continue; }
             let replacement = replacements[i].clone();
             let new_value = (replacement.get_value().parse::<u16>().unwrap() * 3).to_string();
             let is_function = replacement.get_is_function();
             replacements[i].set_value(new_value, is_function);
-        }
+        }*/
     }
 
     pub fn move_replacements_after_end_function(start_function_length_lines: u16, old_replacements: Vec<Replacement>) -> Vec<Replacement>{

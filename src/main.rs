@@ -33,8 +33,10 @@ fn main() {
     assembler.assemble();
 
     let binary: Vec<u8> = assembler.output;
-
-    let store_path = input_path.to_str().unwrap().to_string().split('.').nth(0).unwrap().to_string() + ".bin";
+    let binding = input_path.to_str().unwrap().to_string().clone();
+    let characters = binding.chars();
+    let last_accepted_character = characters.clone().count() - 4;
+    let store_path = characters.collect::<Vec<char>>()[0..last_accepted_character].iter().collect::<String>() + ".bin";
     let binary_file = File::create(store_path);
     _ = binary_file.unwrap().write_all(&binary);
 }
@@ -50,7 +52,10 @@ fn get_inputs(args: Vec<String>, input_path: &mut PathBuf) {
     }
     // Command line args setup
     *input_path = PathBuf::from(get_parameter("-f", args.clone()));
-
+    /*if !input_path.(".asm"){
+        let error = "File name must end with .asm".red().to_string();
+        panic!("{}", error);
+    }*/
 
 
 }
