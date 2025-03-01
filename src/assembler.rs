@@ -18,12 +18,9 @@ impl Assembler {
 
         let lines_without_comments: Vec<String> = argument_parser::ArgumentParser::remove_comments(code_seperated_by_lines.map(|x| x.chars().collect()).collect());
 
-        // Go throw every line and set all the values defined in the file
-        println!("Step one");
+        // Go throw every line and set all the values defined in the file.
         let mut lines_except_values: Vec<String> = argument_parser::ArgumentParser::remove_declaration_lines(lines_without_comments.clone());
-        println!("Step two");
         let mut replacements: Vec<Replacement> = argument_parser::ArgumentParser::get_replacements_from_code(lines_without_comments);
-        println!("Replacements: {}", replacements.to_vec().iter().map(|x| x.make_description()).collect::<Vec<String>>().join(" "));
         let start_function_meta_data = argument_parser::ArgumentParser::get_start_function(replacements.to_vec());
         let start_function_start: u16 = start_function_meta_data.start; // In lines
         let mut start_function_end: Option<u16> = start_function_meta_data.end; // In lines
@@ -39,17 +36,14 @@ impl Assembler {
             indices.push(i as usize);
         }
 
-        println!("Replacements before move: {}", replacements.to_vec().iter().map(|x| x.make_description()).collect::<Vec<String>>().join(" "));
         // Move them
         Self::move_items_by_index(&mut lines_except_values, &indices, 0);
 
 
         // Replace the positions of the functions
         replacements = argument_parser::ArgumentParser::move_replacements_after_end_function(start_function_end.unwrap() - start_function_start, replacements);
-        println!("Replacements after move: {}", replacements.to_vec().iter().map(|x| x.make_description()).collect::<Vec<String>>().join(" "));
         // Convert function positions in lines to function positions in bytes
         argument_parser::ArgumentParser::function_lines_to_function_bytes(&mut replacements);
-        println!("Replacements after bytes: {}", replacements.to_vec().iter().map(|x| x.make_description()).collect::<Vec<String>>().join(" "));
         argument_parser::ArgumentParser::apply_replacements_in_code(replacements, &mut lines_except_values);
 
         let mut binary: Vec<u8> = vec![];

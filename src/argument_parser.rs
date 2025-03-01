@@ -113,8 +113,6 @@ impl ArgumentParser {
                 let function_name = characters[0..characters.len() - 1].iter().collect::<String>();
 
                 let replacement = Replacement::new(function_name, i.to_string(), true);
-                println!("i: {}", i);
-                println!("{}", replacement.make_description());
                 replacements.push(replacement);
 
                 continue;
@@ -164,9 +162,7 @@ impl ArgumentParser {
         // Fetch start function name
         let mut start_function_name: Option<String> = None;
         for replacement in replacements.iter() {
-            println!("Replacemeasfdasdfnt: {}", replacement.get_name());
             if replacement.get_name() != "global_start" { continue }
-            println!("#Replacemeasfdasdfnt: {}", replacement.get_value());
             start_function_name = Some(replacement.get_value().to_string().clone());
             break;
         }
@@ -247,7 +243,6 @@ impl ArgumentParser {
         }
         for i in 0..replacements.len(){
             if !replacements[i].get_is_function(){ continue; }
-            println!("::replacing xaysdf {} (repl: {}", replacements[i].get_name(), !stop_updating);
             if replacements[i].get_value() == global_start_value.to_string().as_str() {
                 replacements[i].set_value(0.to_string(), true);
                 stop_updating = true;
@@ -255,7 +250,6 @@ impl ArgumentParser {
             if !stop_updating {
                 let new_replacement = replacements[i].get_value().parse::<u16>().unwrap() + start_function_length_lines;
                 replacements[i].set_value(new_replacement.to_string(), true);
-                println!("doing something named {} with {}", replacements[i].get_name(), new_replacement);
                 continue;
             }
         }
@@ -274,8 +268,6 @@ impl ArgumentParser {
             total += number_in_sum;
             i += 1;
         }
-
-        println!("{}", total);
 
         // Convert to new type
         let mut b: String = "".to_string();

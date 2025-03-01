@@ -37,9 +37,6 @@ fn main() {
     let store_path = input_path.to_str().unwrap().to_string().split('.').nth(0).unwrap().to_string() + ".bin";
     let binary_file = File::create(store_path);
     _ = binary_file.unwrap().write_all(&binary);
-
-
-    println!("{}", "Success!".to_string().green());
 }
 
 fn get_inputs(args: Vec<String>, input_path: &mut PathBuf) {
