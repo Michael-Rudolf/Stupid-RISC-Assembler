@@ -84,7 +84,7 @@ impl ArgumentParser {
 
         return vec![]
     }*/
-
+    // ZKW
     pub fn get_replacements_from_code(code: Vec<String>) -> Vec<Replacement> {
         let mut replacements: Vec<Replacement> = Vec::new();
         let mut i: u16 = 0;
@@ -113,7 +113,6 @@ impl ArgumentParser {
                 }
                 let characters = parts.get(0).unwrap().chars().collect::<Vec<char>>();
                 let function_name = characters[0..characters.len() - 1].iter().collect::<String>();
-
                 let replacement = Replacement::new(function_name, passed_bytes.to_string(), true);
                 replacements.push(replacement);
 

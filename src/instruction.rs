@@ -68,8 +68,8 @@ impl Instruction{
     pub fn bytes_required_by_instruction_by_name(named: String) -> u8{
         match named.as_str(){
             "halt" | "soc" => 1,
-            "jmp" | "pushb" | "popb" | "inc" | "dec" | "sow" => 2,
-            "add" | "sub" | "mul" | "div" | "mod" | "jmpz" | "mov" | "ldb" | "stb" => 3,
+            "jmp" | "pushb" | "popb" | "sow" => 2,
+            "add" | "sub" | "mul" | "div" | "mod" | "jmpz" | "mov" | "ldb" | "stb" | "inc" | "dec" => 3,
             _ => 0
         }
     }
