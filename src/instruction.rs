@@ -78,7 +78,8 @@ impl Instruction{
     }
 
     pub fn from_string(instruction: String, current_line: u32) -> Option<Instruction> {
-        let splitted = instruction.split_whitespace().collect::<Vec<&str>>();
+        let splitted = ArgumentParser::line_to_argument_parts(instruction.as_str());//instruction.split_whitespace().collect::<Vec<&str>>();
+        println!("Splitted in {:?}", splitted);
 
         let task_string = splitted[0].to_ascii_lowercase();
 
@@ -91,7 +92,7 @@ impl Instruction{
                 }
             },
             2 => {
-                let arg1 = ArgumentParser::argument_to_8_bit_binary(splitted[1], current_line);
+                let arg1 = ArgumentParser::argument_to_8_bit_binary(splitted[1].as_str(), current_line);
 
                 match task_string.as_ref() {
                     "jmp" => Some(Instruction::new(JUMP_INSTRUCTION, 1, arg1, 0)),
@@ -104,8 +105,8 @@ impl Instruction{
                 }
             }
             3 => {
-                let arg1 = ArgumentParser::argument_to_8_bit_binary(splitted[1], current_line);
-                let arg2 = ArgumentParser::argument_to_8_bit_binary(splitted[2], current_line);
+                let arg1 = ArgumentParser::argument_to_8_bit_binary(splitted[1].as_str(), current_line);
+                let arg2 = ArgumentParser::argument_to_8_bit_binary(splitted[2].as_str(), current_line);
 
                 match task_string.as_ref() {
                     "add" => Some(Instruction::new(ADD_INSTRUCTION, 2, arg1, arg2)),
