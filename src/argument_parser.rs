@@ -42,48 +42,6 @@ impl ArgumentParser {
         }
     }
 
-    pub fn remove_comments(code: Vec<String>) -> Vec<String> {
-        let mut result: Vec<String> = Vec::new();
-        for line in code.iter() {
-            if let Some(first_character) = line.chars().nth(0) {
-                if first_character != '#' && line != "" {
-                    let part_without_comment = line.split("#").nth(0).unwrap();
-                    result.push(part_without_comment.trim().to_string());
-                }
-            }
-        }
-
-        result
-    }
-
-
-    /*fn resolve_macro(macro_n: &str, arg1: Option<u32>, arg2: Option<u32>, line: u32) -> Vec<String> {
-        // Remove leading !
-        let macro_characters: Vec<char> = Ok(macro_n.chars().collect()).unwrap();
-        let macro_internal_name = macro_characters[1..].to_vec().iter().collect().as_ref();
-
-        match macro_internal_name{
-            "jmp" => {
-                if arg1.is_none(){
-                    let error = format!(" Macro '{}' at line {} requires at least 1 argument but 0 were found.", macro_internal_name, line).red().to_string();
-                    panic!("{}", error);
-                }
-                if arg1.unwrap() < 128{
-                    return vec![format!("jmp {}", arg1.unwrap())];
-                }
-                return vec![
-                    format!("ldii {}", arg1.unwrap()), // Load immediate to internal register
-                    format!("jmp R{}", RESERVED_REGISTER),
-                ];
-            }
-            _ => {
-                let error = format!("Unknown macro '{}' at line {}.", macro_internal_name, line).red().to_string();
-                panic!("{}", error);
-            }
-        }
-
-        return vec![]
-    }*/
     // ZKW
     pub fn get_replacements_from_code(code: Vec<String>) -> Vec<Replacement> {
         let mut replacements: Vec<Replacement> = Vec::new();
@@ -95,9 +53,9 @@ impl ArgumentParser {
             // Ensure line has at least one char
             if line.is_empty() { continue; }
             if line.starts_with('.') {
-                let parts: Vec<&str> = line.split_whitespace().collect();
+                let parts: Vec<String> = Self::line_to_argument_parts(line);//line.split_whitespace().collect();
                 if parts.len() != 2{
-                    let error = format!("Two arguments required for constant declaration, but {} where found at line {}.", parts.len(), current_line_number).red().to_string();
+                    let error = format!("Two arguments required for constant declaration, but {} were found at line {} ({}).", parts.len(), current_line_number, line).red().to_string();
                     panic!("{}", error);
                 }
                 let constant_name = parts.get(0).unwrap().chars().collect::<Vec<char>>()[1..].iter().collect::<String>();
@@ -126,6 +84,46 @@ impl ArgumentParser {
         replacements = Self::replace_replacements(replacements);
 
         replacements
+    }
+
+    pub fn line_to_argument_parts(lines: &str) -> Vec<String> {
+        let characters: Vec<char> = lines.chars().collect();
+        let mut arguments: Vec<String> = vec![];
+        let mut current_argument = "".to_string();
+        let mut next_character_escaped = false;
+        let mut whitespaces_escaped = false;
+
+        for character in characters {
+            println!("Current character: {}, current_argument: {}, char_escaped: {}, whitespaces_escaped: {}", character, current_argument, next_character_escaped, whitespaces_escaped);
+            if (character == ' ' || character == '\t') && !(next_character_escaped || whitespaces_escaped) {
+                // add current argument
+                if current_argument != "" {
+                    arguments.push(current_argument.parse().unwrap());
+                    current_argument = "".to_string();
+                    //println!("Added argument: {}", current_argument);
+                }
+                continue;
+            }
+
+            if character == '\''{
+                whitespaces_escaped = !whitespaces_escaped;
+            }
+
+            if character == '\\' && !next_character_escaped {
+                next_character_escaped = true;
+            }else{
+                next_character_escaped = false;
+            }
+
+            current_argument = current_argument.to_string() + character.to_string().as_str();
+        }
+
+        if current_argument != "" {
+            arguments.push(current_argument.parse().unwrap());
+        }
+
+        arguments
+
     }
 
     fn replace_replacements(replacements: Vec<Replacement>) -> Vec<Replacement> {
@@ -159,63 +157,6 @@ impl ArgumentParser {
         result
     }
 
-
-
-    pub fn get_start_function(replacements: Vec<Replacement>) -> FunctionMetadata {
-        // Fetch start function name
-        let mut start_function_name: Option<String> = None;
-        for replacement in replacements.iter() {
-            if replacement.get_name() != "global_start" { continue }
-            start_function_name = Some(replacement.get_value().to_string().clone());
-            break;
-        }
-
-        if start_function_name.clone().is_none() {
-            let error = "Needs start function declaration (insert .global_start <main/start>).".red().to_string();
-            panic!("{}", error);
-        }
-
-        // Fetch start & end position
-        let mut start_function_start_pos: Option<u16> = None;
-        let mut start_function_end_pos: Option<u16> = None;
-        let mut i: u16 = 0;
-        for replacement in replacements.iter() {
-            i += 1;
-            if replacement.get_value() != start_function_name.clone().unwrap() { continue }
-
-            if !replacement.get_is_function(){
-                //let error = format!("Invalid constant name '{}'. No constant can be named {:?}", replacement.get_name(), start_function_name.clone().unwrap()).red().to_string();
-                //panic!("{}", error);
-                continue;
-            }
-
-            start_function_start_pos = Some(replacement.get_value().parse::<u16>().unwrap());
-
-            // The end position is just the next function / the last number
-            if replacements.len() > i as usize {
-                let end_replacement = replacements.get(i as usize).unwrap();
-
-                if !end_replacement.get_is_function(){
-                    /*let error = format!("Constants can't be defined in global_start function. Please move {} to the top instead", end_replacement.get_name()).red().to_string();
-                    panic!("{}", error);*/
-                    continue;
-                }
-
-                let end_function_value = end_replacement.get_value().parse::<u16>().unwrap();
-                start_function_end_pos = Some(end_function_value)
-            }
-
-            break;
-        }
-
-        if start_function_start_pos.is_none() {
-            let error = format!("Start function name ({}) defined but not implemented.", start_function_name.unwrap().red().to_string()).red().to_string();
-            panic!("{}", error);
-        }
-
-        FunctionMetadata{ name: start_function_name.unwrap().to_string(), start: start_function_start_pos.unwrap(), end: start_function_end_pos }
-    }
-
     pub fn apply_replacements_in_code(replacements: Vec<Replacement>, code: &mut Vec<String>){
         for i in 0..code.iter().len(){
             for replacement in replacements.iter() {
@@ -224,45 +165,6 @@ impl ArgumentParser {
                 println!("{}", code[i]);
             }
         }
-    }
-
-    pub fn function_lines_to_function_bytes(replacements: &mut Vec<Replacement>){
-        for replacement in replacements.iter() {
-            println!("{}", replacement.make_description());
-        }
-        /*for i in 0..replacements.len(){
-            if !replacements[i].get_is_function() { continue; }
-            let replacement = replacements[i].clone();
-            let new_value = (replacement.get_value().parse::<u16>().unwrap() * 3).to_string();
-            let is_function = replacement.get_is_function();
-            replacements[i].set_value(new_value, is_function);
-        }*/
-    }
-
-    pub fn move_replacements_after_end_function(start_function_length_lines: u16, old_replacements: Vec<Replacement>) -> Vec<Replacement>{
-        let mut stop_updating = false;
-        let mut replacements: Vec<Replacement> = old_replacements.to_vec();
-        // The problem:
-        // Start function name is global_start, so it'll always think the start function starts at .global_start main.
-        // Retrieve the value of .global_start instead and wait for a function to equal it instead.
-        let mut global_start_value : u16 = 0;
-        for old_replacement in replacements.iter() {
-            if old_replacement.get_name() == "global_start" { global_start_value = old_replacement.get_value().parse::<u16>().unwrap(); break; }
-        }
-        for i in 0..replacements.len(){
-            if !replacements[i].get_is_function(){ continue; }
-            if replacements[i].get_value() == global_start_value.to_string().as_str() {
-                replacements[i].set_value(0.to_string(), true);
-                stop_updating = true;
-            }
-            if !stop_updating {
-                let new_replacement = replacements[i].get_value().parse::<u16>().unwrap() + start_function_length_lines;
-                replacements[i].set_value(new_replacement.to_string(), true);
-                continue;
-            }
-        }
-
-        replacements
     }
 
 
