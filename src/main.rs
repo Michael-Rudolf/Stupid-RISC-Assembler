@@ -8,12 +8,20 @@ use std::path::PathBuf;
 mod assembler;
 mod instruction;
 mod argument_parser;
-mod replacement;
+mod utility;
+mod tests;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mut input_path: PathBuf = Default::default();
-    get_inputs(args, &mut input_path);
+    let mut perform_test = false;
+    get_inputs(args, &mut input_path, &mut perform_test);
+
+    if perform_test {
+        println!("{}", tests::test::test_all());
+        return;
+    }
+
     let display = input_path.display();
 
     // Open the path in read-only mode, returns `io::Result<File>`
@@ -41,7 +49,10 @@ fn main() {
     _ = binary_file.unwrap().write_all(&binary);
 }
 
-fn get_inputs(args: Vec<String>, input_path: &mut PathBuf) {
+fn get_inputs(args: Vec<String>, input_path: &mut PathBuf, is_test: &mut bool) {
+    if args.contains(&String::from("--test")) {
+        *is_test = true;
+    }
     if args.contains(&"-v".to_string()){
         // Visual setup
         let dialog = FileDialog::new();
@@ -50,6 +61,7 @@ fn get_inputs(args: Vec<String>, input_path: &mut PathBuf) {
         }
         return;
     }
+
     // Command line args setup
     *input_path = PathBuf::from(get_parameter("-f", args.clone()));
     /*if !input_path.(".asm"){

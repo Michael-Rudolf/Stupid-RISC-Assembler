@@ -1,7 +1,8 @@
 use instruction::Instruction;
-use crate::{argument_parser, instruction};
+use crate::{instruction};
 use colored::Colorize;
-use crate::replacement::Replacement;
+use crate::argument_parser::ArgumentParser;
+use crate::utility::replacement::Replacement;
 
 pub struct Assembler {
     pub code: String,
@@ -16,12 +17,22 @@ impl Assembler {
         // Remove all comments and empty lines
         let code_seperated_by_lines = self.code.lines();
         let lines = code_seperated_by_lines.clone().map(|x| x.chars().collect()).collect();
-        let lines_2 = code_seperated_by_lines.map(|x| x.chars().collect()).collect();
+        let sections = ArgumentParser::split_sections(lines);
+        let data_section = sections.0;
+        let text_section = sections.1;
+        let data_parsed = ArgumentParser::compile_data_section(data_section);
+        let data_replacements = data_parsed.1;
+        let data_bytes = data_parsed.0;
+        let mut lines_except_values: Vec<String> = ArgumentParser::remove_declaration_lines(text_section.clone());
+        let mut replacements: Vec<Replacement> = ArgumentParser::get_replacements_from_code(text_section.clone());
+        let data_offset = replacements[replacements.iter().position(|x| x.get_name() == "data_offset").unwrap()].get_value().parse::<u32>().unwrap();
 
-        // Go throw every line and set all the values defined in the file.
-        let mut lines_except_values: Vec<String> = argument_parser::ArgumentParser::remove_declaration_lines(lines);
-        let replacements: Vec<Replacement> = argument_parser::ArgumentParser::get_replacements_from_code(lines_2);
-        argument_parser::ArgumentParser::apply_replacements_in_code(replacements, &mut lines_except_values);
+        for replacement in data_replacements{
+            replacements.push(Replacement::new(replacement.get_name(), (replacement.get_value().parse::<u32>().unwrap() + data_offset).to_string(), false));
+        }
+
+
+        ArgumentParser::apply_replacements_in_code(replacements, &mut lines_except_values);
 
         let mut binary: Vec<u8> = vec![];
         let mut i: u32 = 0;
@@ -35,6 +46,9 @@ impl Assembler {
                 panic!("{}", error);
             }
         }
+        println!("binary: {:?}", binary);
+        binary.append(&mut data_bytes.clone());
+        println!("binary: {:?}", binary);
         self.output = binary;
     }
 
