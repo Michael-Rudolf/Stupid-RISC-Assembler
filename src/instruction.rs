@@ -75,9 +75,9 @@ impl Instruction{
     }
 
     pub fn from_string(instruction: String, current_line: u32) -> Option<Instruction> {
-        let splitted = ArgumentParser::line_to_argument_parts(instruction.as_str());//instruction.split_whitespace().collect::<Vec<&str>>();
-        println!("Splitted in {:?}", splitted);
+        let splitted = ArgumentParser::line_to_argument_parts(instruction.as_str());
 
+        if splitted.is_empty() { return None }
         let task_string = splitted[0].to_ascii_lowercase();
 
         match splitted.len() {

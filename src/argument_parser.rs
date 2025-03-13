@@ -2,6 +2,7 @@ use std::cmp::PartialEq;
 use colored::Colorize;
 use crate::instruction;
 use crate::utility::replacement::Replacement;
+use crate::utility::math;
 
 const CHARACTERS: [&str; 36] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 
@@ -18,7 +19,6 @@ enum DataType{
 
 impl DataType {
     fn from_string(d_type: &str) -> DataType {
-        println!("from_string_line: üüüüasdfas0asd98");
         match d_type {
             "8b" | "str" | "char" => DataType::Int8,
             "16b" => DataType::Int16,
@@ -132,13 +132,10 @@ impl ArgumentParser {
             if data0chars[0] == '"' {
                 // Decode the chars
                 //data0chars.remove(0);
-                println!("Previous chars: {:?}", data0chars);
                 data0chars.remove(0);
                 data0chars.remove(data0chars.len() - 1);
-                println!("Current chars: {:?}", data0chars);
                 for date in data0chars{
                     let replacement = Self::argument_to_8_bit_binary(&("\'".to_owned() + date.to_string().as_str() + "\'"), -1);
-                    println!("Parsing char {} to {}", date, replacement);
                     data_bytes.push(replacement);
                 }
             }else{
@@ -187,8 +184,9 @@ impl ArgumentParser {
 
                 continue;
             }
-            let instruction_name = line.split_whitespace().nth(0).unwrap();
-            passed_bytes += instruction::Instruction::bytes_required_by_instruction_by_name(instruction_name.to_string()) as u32;
+            if let Some(instruction_name) = line.split_whitespace().nth(0) {
+                passed_bytes += instruction::Instruction::bytes_required_by_instruction_by_name(instruction_name.to_string()) as u32;
+            }
         }
 
         replacements = Self::replace_replacements(replacements);
@@ -205,13 +203,11 @@ impl ArgumentParser {
         let mut whitespaces_escaped = false;
 
         for character in characters {
-            println!("Current character: {}, current_argument: {}, char_escaped: {}, whitespaces_escaped: {}", character, current_argument, next_character_escaped, whitespaces_escaped);
             if (character == ' ' || character == '\t') && !(next_character_escaped || whitespaces_escaped) {
                 // add current argument
                 if current_argument != "" {
                     arguments.push(current_argument.parse().unwrap());
                     current_argument = "".to_string();
-                    //println!("Added argument: {}", current_argument);
                 }
                 continue;
             }
@@ -261,8 +257,16 @@ impl ArgumentParser {
             if line.is_empty() { continue; }
             if line.starts_with('.') { continue; }
             if line.ends_with(':') { continue; }
+            if line.starts_with('#') { continue; }
 
-            result.push(line.to_string());
+            let mut line_without_comments = "".to_string();
+
+            for char in line.chars(){
+                if char == '#' { break; }
+                line_without_comments += char.to_string().as_str();
+            }
+
+            result.push(line_without_comments);
         }
 
         result
@@ -270,10 +274,9 @@ impl ArgumentParser {
 
     pub fn apply_replacements_in_code(replacements: Vec<Replacement>, code: &mut Vec<String>){
         for i in 0..code.iter().len(){
-            for replacement in replacements.iter() {
-                print!("Replacing {} with: ", code[i]);
+            for replacement in replacements.clone().iter() {
                 code[i] = code[i].replace(replacement.get_name().as_str(), replacement.get_value().as_str()).as_str().to_string();
-                println!("{}", code[i]);
+                code[i] = Self::resolve_all_math_ops_in_line(code[i].clone(), replacements.clone());
             }
         }
     }
@@ -299,6 +302,36 @@ impl ArgumentParser {
         }
 
         b.chars().rev().collect::<String>()
+    }
+
+    pub fn resolve_all_math_ops_in_line(line: String, replacements: Vec<Replacement>) -> String {
+        let mut next_replacement_data = "".to_string();
+        let mut output: String = "".to_string();
+        let mut write_to_repl_data = false;
+
+        let characters: Vec<char> = line.chars().collect();
+
+        for character in characters.iter() {
+            if *character == '[' {
+                write_to_repl_data = true;
+                continue;
+            }
+            if *character == ']' {
+                write_to_repl_data = false;
+                output += math::resolve_string(next_replacement_data.clone().parse().unwrap(), replacements.clone()).as_str();
+                next_replacement_data = "".to_string();
+                continue;
+            }
+            if write_to_repl_data {
+                next_replacement_data += character.to_string().as_str();
+            }else {
+                output = (&*(output.to_owned() + &*character.to_string())).parse().unwrap();
+            }
+        }
+
+
+
+        output
     }
 }
 pub struct FunctionMetadata{

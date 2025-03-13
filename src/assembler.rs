@@ -42,13 +42,11 @@ impl Assembler {
                 let mut binary_instruction = instruction.to_vec();
                 binary.append(&mut binary_instruction);
             }else{
-                let error = format!("Couldn't decode line {} at line {}.", line.clone().to_string(), i).red().to_string();
-                panic!("{}", error);
+                let warning = format!("Couldn't decode line {} at line {}.", line.clone().to_string(), i).yellow().to_string();
+                println!("{}", warning);
             }
         }
-        println!("binary: {:?}", binary);
         binary.append(&mut data_bytes.clone());
-        println!("binary: {:?}", binary);
         self.output = binary;
     }
 
