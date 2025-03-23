@@ -14,7 +14,7 @@ sriscasm -v
 
 To parse the input path as an argument, run
 ```shell
-sriscasm -f path/to/file
+sriscasm path/to/file
 ```
 
 
