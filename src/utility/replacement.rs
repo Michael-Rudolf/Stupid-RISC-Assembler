@@ -14,6 +14,7 @@ impl Replacement {
     pub fn get_is_function(&self) -> bool { self.is_function }
     pub fn set_value(&mut self, new_value: String, is_function: bool) { self.new_value = new_value; self.is_function = is_function; }
 
+    #[allow(dead_code)]
     pub fn make_description(&self) -> String { format!("Replacing {} with {} while being a function: {}", self.initial_value, self.new_value, self.is_function)}
 }
 

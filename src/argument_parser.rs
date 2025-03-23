@@ -334,8 +334,3 @@ impl ArgumentParser {
         output
     }
 }
-pub struct FunctionMetadata{
-    pub name: String,
-    pub start: u16,
-    pub end: Option<u16>,
-}
