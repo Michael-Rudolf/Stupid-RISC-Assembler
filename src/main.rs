@@ -63,7 +63,7 @@ fn get_inputs(args: Vec<String>, input_path: &mut PathBuf, is_test: &mut bool) {
     }
 
     // Command line args setup
-    *input_path = PathBuf::from(get_parameter("-f", args.clone()));
+    *input_path = PathBuf::from(args.clone().last().unwrap());
     /*if !input_path.(".asm"){
         let error = "File name must end with .asm".red().to_string();
         panic!("{}", error);
