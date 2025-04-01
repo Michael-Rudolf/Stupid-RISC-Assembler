@@ -60,6 +60,7 @@ impl ArgumentParser {
             // Fits constraints
             return arg_decimal_interpratation as u8;
         }
+        println!("Argument (not decimal) is: {}", argument);
         if argument.len() < 2 {
             let error = format!("Argument {} in line {} is not decimal and needs type and value.", argument, line).red().to_string();
             panic!("{}", error);
@@ -75,6 +76,7 @@ impl ArgumentParser {
             "r" => { number.parse::<u8>().unwrap() | 0b1000_0000 },
             "\'" => { number.chars().nth(0).unwrap() as u8 },
             _ => {
+
                 let error = format!("Number system {} in argument {} (line {}) isn't available.", encoding, argument, line).red().to_string();
                 panic!("{}", error);
             }
@@ -103,17 +105,32 @@ impl ArgumentParser {
         (section_data, section_text)
     }
 
-    pub fn compile_data_section(lines: Vec<String>) -> (Vec<u8>, Vec<Replacement>) {
+    // The first replacement vector refers to data that has to be changed to fit the offset while the second one does not.
+    pub fn compile_data_section(lines: Vec<String>, replacements_in: &mut Vec<Replacement>) -> (Vec<u8>, Vec<Replacement>) {
         let mut data: Vec<u8> = Vec::new();
         let mut replacements: Vec<Replacement> = Vec::new();
-
-        for line in lines {
+        let mut bytes_count: u32 = 0;
+        for mut line in lines {
+            if line.chars().nth(0) == Some('.') {
+                println!("Line : {} does start with . ", line);
+                line.remove(0);
+                let arguments = line.split_whitespace().collect::<Vec<&str>>();
+                let name = arguments[0];
+                let mut rest = arguments[1..].join(" ");
+                rest = rest.replace('$', &*(bytes_count - 1).to_string());
+                replacements_in.push(Replacement::new(name.to_string(), Self::resolve_all_math_ops_in_line(rest, [replacements.clone(), replacements_in.clone()].concat()), false));
+                continue;
+            }
+            println!("Line : {} doesnt start with . ", line);
             let parts = Self::line_to_argument_parts(line.as_str());//line.split(" ").collect::<Vec<&str>>();
+            println!("Parts: {:?}, line: {}", parts, line);
             let name = &parts[0];
             let data_type = DataType::from_string(&*parts[1]);
             let data_def = parts[2..].to_vec();
-            let mut bytes = Self::data_to_bytes(data_def.clone(), data_type);
+            let mut bytes = Self::data_to_bytes(data_def.clone(), data_type, bytes_count);
             let start_position = data.len();
+
+            bytes_count += bytes.len() as u32;
 
             data.append(&mut bytes);
 
@@ -124,14 +141,13 @@ impl ArgumentParser {
         (data, replacements)
     }
 
-    fn data_to_bytes(data: Vec<String>, data_type: DataType) -> Vec<u8> {
+    fn data_to_bytes(data: Vec<String>, data_type: DataType, passed_bytes: u32) -> Vec<u8> {
         let data = data;
         let mut data_bytes: Vec<u8> = Vec::new();
         if data_type == DataType::Int8 {
             let mut data0chars = data[0].chars().collect::<Vec<char>>();
             if data0chars[0] == '"' {
                 // Decode the chars
-                //data0chars.remove(0);
                 data0chars.remove(0);
                 data0chars.remove(data0chars.len() - 1);
                 for date in data0chars{
@@ -141,7 +157,7 @@ impl ArgumentParser {
             }else{
                 // Decode the numbers
                 for date in data{
-                    data_bytes.push(Self::argument_to_8_bit_binary(&date, -1));
+                    data_bytes.push(Self::resolve_all_math_ops_in_line(date, vec![Replacement::new("$".to_string(), (passed_bytes - 1).to_string(), false)]).parse().unwrap());
                 }
             }
         }
@@ -308,8 +324,19 @@ impl ArgumentParser {
         let mut next_replacement_data = "".to_string();
         let mut output: String = "".to_string();
         let mut write_to_repl_data = false;
+        let mut line = line;
+
+        for replacement in replacements.iter() {
+            line = line.replace(replacement.get_name().as_str(), replacement.get_value().as_str()).parse().unwrap();
+        }
 
         let characters: Vec<char> = line.chars().collect();
+
+
+
+        println!("characters: {:?}", line);
+
+
 
         for character in characters.iter() {
             if *character == '[' {
@@ -326,6 +353,13 @@ impl ArgumentParser {
                 next_replacement_data += character.to_string().as_str();
             }else {
                 output = (&*(output.to_owned() + &*character.to_string())).parse().unwrap();
+            }
+        }
+
+        if !output.parse::<i32>().is_ok() {
+            for replacement in replacements.iter() {
+                output = output.replace(replacement.get_name().as_str(), replacement.get_value().as_str()).as_str().parse().unwrap();
+                println!("replacement: {}, out: {}", replacement.make_description(), output);
             }
         }
 

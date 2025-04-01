@@ -20,11 +20,11 @@ impl Assembler {
         let sections = ArgumentParser::split_sections(lines);
         let data_section = sections.0;
         let text_section = sections.1;
-        let data_parsed = ArgumentParser::compile_data_section(data_section);
+        let mut replacements: Vec<Replacement> = ArgumentParser::get_replacements_from_code(text_section.clone());
+        let data_parsed = ArgumentParser::compile_data_section(data_section, &mut replacements);
         let data_replacements = data_parsed.1;
         let data_bytes = data_parsed.0;
         let mut lines_except_values: Vec<String> = ArgumentParser::remove_declaration_lines(text_section.clone());
-        let mut replacements: Vec<Replacement> = ArgumentParser::get_replacements_from_code(text_section.clone());
         let data_offset = replacements[replacements.iter().position(|x| x.get_name() == "data_offset").unwrap()].get_value().parse::<u32>().unwrap();
 
         for replacement in data_replacements{
